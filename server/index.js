@@ -27,11 +27,12 @@ const clientDistPath = path.resolve(
 );
 const clientIndexPath = path.join(clientDistPath, 'index.html');
 
-// CORS configuration - allow local Vite dev and Vercel production/preview URLs
+// CORS configuration - allow local Vite dev, Render, and Vercel URLs
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   process.env.CLIENT_URL,
+  process.env.RENDER_EXTERNAL_URL,
 ].filter(Boolean);
 
 app.use(
@@ -40,7 +41,8 @@ app.use(
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app')
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.onrender.com')
       ) {
         callback(null, true);
       } else {
