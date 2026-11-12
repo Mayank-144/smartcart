@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Sparkles, X, AlertCircle, ArrowRight, Leaf, ShoppingCart } from 'lucide-react';
 import SearchBar from './components/SearchBar';
 import ProductCard from './components/ProductCard';
@@ -28,8 +28,6 @@ export default function App() {
   const [relatedLoading, setRelatedLoading] = useState(false);
   const [relatedError, setRelatedError] = useState(null);
   const [relatedOpen, setRelatedOpen] = useState(false);
-
-  const relatedRef = useRef(null);
 
   // ─── Debounced Search (300ms) ─────────────────────────────────────────────
   useEffect(() => {
@@ -76,10 +74,6 @@ export default function App() {
     setRelatedProducts([]);
     setRelatedOpen(true);
 
-    setTimeout(() => {
-      relatedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 80);
-
     try {
       const res = await fetch(`/api/product/${product._id}/related`);
       const data = await res.json();
@@ -117,7 +111,6 @@ export default function App() {
 
       return [...currentCart, { ...product, quantity: 1 }];
     });
-    showRelatedProducts(product);
   };
 
   const handleUpdateQuantity = (productId, quantity) => {
@@ -287,14 +280,15 @@ export default function App() {
 
         {/* ─── Related Products Panel (slide-down below grid) ──────────── */}
         <div
-          ref={relatedRef}
           className="scroll-mt-20"
+          aria-hidden={!relatedOpen}
           style={{
             overflow: 'hidden',
-            display: relatedOpen ? 'block' : 'none',
             maxHeight: relatedOpen ? '600px' : '0px',
             opacity: relatedOpen ? 1 : 0,
-            transition: 'max-height 0.4s ease, opacity 0.3s ease',
+            visibility: relatedOpen ? 'visible' : 'hidden',
+            pointerEvents: relatedOpen ? 'auto' : 'none',
+            transition: `max-height 0.35s ease, opacity 0.25s ease, visibility 0s linear ${relatedOpen ? '0s' : '0.35s'}`,
           }}
         >
           <div className="mt-6 pt-5 border-t border-emerald-100">
@@ -415,6 +409,7 @@ export default function App() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemove={(productId) => setCart((currentCart) => currentCart.filter((item) => item._id !== productId))}
         onClear={() => setCart([])}
+        onAddRecommendation={handleAddToCart}
       />
     </div>
   );

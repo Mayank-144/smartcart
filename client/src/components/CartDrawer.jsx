@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Sparkles } from 'lucide-react';
 import { getProductImageUrl } from './ProductCard';
 
 export default function CartDrawer({
@@ -9,22 +9,90 @@ export default function CartDrawer({
   onUpdateQuantity,
   onRemove,
   onClear,
+  onAddRecommendation,
 }) {
-  if (!isOpen) return null;
-
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartItemIds = cart.map((item) => item._id).join(',');
+  const recommendationSourceKey = cart.slice(-3).map((item) => item._id).join(',');
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen || !recommendationSourceKey) {
+      setRecommendations([]);
+      setRecommendationsLoading(false);
+      setRecommendationsError(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const recommendationSourceIds = recommendationSourceKey.split(',');
+    const cartIds = new Set(cartItemIds.split(','));
+
+    const loadRecommendations = async () => {
+      setRecommendations([]);
+      setRecommendationsError(null);
+      setRecommendationsLoading(true);
+
+      try {
+        const batches = await Promise.all(
+          recommendationSourceIds.map(async (productId) => {
+            const response = await fetch(`/api/product/${productId}/related`);
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to load cart recommendations');
+            }
+
+            return Array.isArray(data.results) ? data.results : [];
+          })
+        );
+
+        const uniqueRecommendations = new Map();
+        for (const product of batches.flat()) {
+          if (cartIds.has(product._id)) continue;
+
+          const current = uniqueRecommendations.get(product._id);
+          if (!current || (product.score || 0) > (current.score || 0)) {
+            uniqueRecommendations.set(product._id, product);
+          }
+        }
+
+        const rankedRecommendations = [...uniqueRecommendations.values()]
+          .sort((a, b) => (b.score || 0) - (a.score || 0))
+          .slice(0, 6);
+
+        if (!cancelled) setRecommendations(rankedRecommendations);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Cart recommendation error:', error);
+          setRecommendationsError(error.message || 'Failed to load cart recommendations');
+        }
+      } finally {
+        if (!cancelled) setRecommendationsLoading(false);
+      }
+    };
+
+    loadRecommendations();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, cartItemIds, recommendationSourceKey]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        className="cart-backdrop-enter absolute inset-0 bg-slate-900/40"
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+        <div className="cart-panel-enter w-screen max-w-md bg-white shadow-2xl flex flex-col">
           {/* Header */}
           <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -113,6 +181,79 @@ export default function CartDrawer({
                   </div>
                 </div>
               ))
+            )}
+
+            {cart.length > 0 && (
+              <section className="border-t border-slate-100 pt-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Recommended for your cart</h3>
+                    <p className="text-xs text-slate-400">Picked to go well with your items</p>
+                  </div>
+                </div>
+
+                {recommendationsLoading && (
+                  <div className="flex items-center gap-2 py-4 text-xs text-slate-500">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                    Finding products you might like...
+                  </div>
+                )}
+
+                {recommendationsError && (
+                  <p role="alert" className="py-2 text-xs text-rose-600">
+                    Recommendations unavailable: {recommendationsError}
+                  </p>
+                )}
+
+                {!recommendationsLoading && !recommendationsError && recommendations.length > 0 && (
+                  <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+                    {recommendations.map((product) => (
+                      <article
+                        key={product._id}
+                        className="w-36 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-white"
+                      >
+                        {getProductImageUrl(product.category) ? (
+                          <img
+                            src={getProductImageUrl(product.category)}
+                            alt=""
+                            className="h-20 w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-20 items-center justify-center bg-emerald-50 text-3xl">
+                            🛒
+                          </div>
+                        )}
+                        <div className="p-2.5">
+                          <h4 className="truncate text-xs font-semibold text-slate-800" title={product.name}>
+                            {product.name}
+                          </h4>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900">
+                              ${product.price.toFixed(2)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onAddRecommendation(product)}
+                              className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                              aria-label={`Add ${product.name} to cart`}
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+
+                {!recommendationsLoading && !recommendationsError && recommendations.length === 0 && (
+                  <p className="py-2 text-xs text-slate-400">
+                    No additional recommendations for these items.
+                  </p>
+                )}
+              </section>
             )}
           </div>
 

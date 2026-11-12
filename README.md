@@ -78,3 +78,48 @@ After running the seed script, define your Vector Search Index in MongoDB Atlas:
 ```
 
 7. Click **Next** and **Create Vector Search Index**. Wait 1–2 minutes for the status to become **Active**.
+
+---
+
+## 🚀 Local Setup and Render Deployment
+
+### Configure Atlas and seed products
+
+1. Create a free Atlas **M0** cluster, a database user with `readWrite` access to
+   the `smartcart` database, and a Network Access entry for `0.0.0.0/0` so Render
+   can connect. Use a strong, unique database-user password.
+2. In Atlas, open **Connect → Drivers**, copy the Node.js connection string, and
+   replace its database name with `smartcart`. In `server/.env`, set:
+
+   ```env
+   MONGODB_URI=mongodb+srv://<username>:<url-encoded-password>@<cluster-host>/smartcart?retryWrites=true&w=majority
+   ```
+
+   URL-encode reserved characters in the password. Keep this secret out of Git;
+   `server/.env` is ignored.
+3. From the repository root, run `npm run seed` (or `cd server` then
+   `npm run seed`). This deletes existing documents in `products`, generates
+   embeddings for all 90 seed products, and inserts them into Atlas. The first
+   run downloads the embedding model; allow several minutes.
+4. Create the `vector_index` Atlas Vector Search index using the JSON above and
+   wait until it is **Active**.
+
+### Run locally
+
+Run `npm run dev` from the repository root, then open
+`http://localhost:5173`. Search for `milk` and select a product to check search
+and related-product results.
+
+### Deploy one service to Render
+
+The Express server serves `client/dist` when that build exists, so the frontend
+can use its existing relative `/api` URLs without a production Vite proxy.
+
+1. Push the project to GitHub and create a Render **Web Service** connected to
+   the repository. Leave **Root Directory** blank (repository root).
+2. Set **Build Command** to `npm run build` and **Start Command** to `npm start`.
+3. Add `MONGODB_URI` in Render's environment settings using the same Atlas URI.
+   Render sets `PORT` automatically; do not hardcode it.
+4. Deploy and open the Render service URL. The first request that needs an
+   embedding may take longer while the model assets are downloaded. Render's
+   free service may also sleep when idle and cold-start on the next visit.

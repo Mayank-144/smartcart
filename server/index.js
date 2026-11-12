@@ -2,6 +2,9 @@ import dns from 'dns';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { existsSync } from 'fs';
+import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import searchRouter from './routes/search.js';
 
@@ -17,6 +20,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
+const clientDistPath = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../client/dist'
+);
+const clientIndexPath = path.join(clientDistPath, 'index.html');
 
 // CORS configuration - allow Vite frontend on port 5173
 app.use(
@@ -27,6 +35,10 @@ app.use(
 );
 
 app.use(express.json());
+
+if (existsSync(clientIndexPath)) {
+  app.use(express.static(clientDistPath));
+}
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -40,6 +52,18 @@ app.get('/', (req, res) => {
 
 // Mount Search & Recommendation Routes
 app.use('/api', searchRouter);
+
+if (existsSync(clientIndexPath)) {
+  app.get('*', (req, res, next) => {
+    if (req.path === '/api' || req.path.startsWith('/api/')) {
+      return next();
+    }
+
+    return res.sendFile(clientIndexPath, (err) => {
+      if (err) next(err);
+    });
+  });
+}
 
 // Global Error Handler
 app.use((err, req, res, next) => {
