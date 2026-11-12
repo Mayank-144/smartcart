@@ -202,30 +202,30 @@ export default function App() {
       <main className="flex-1 pb-12">
 
         {/* Hero / Search section — full width, no side padding gap */}
-        <section className="bg-white border-b border-emerald-100 shadow-sm mb-8 px-4 py-10 sm:px-6 sm:py-12">
+        <section className="bg-white border-b border-emerald-100 shadow-sm mb-6 px-4 py-6 sm:px-6 sm:py-8">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-              <Sparkles className="h-3.5 w-3.5" />
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              <Sparkles className="h-3 w-3" />
               Smart grocery discovery
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
               Find groceries by meaning, not keywords
             </h1>
-            <p className="mt-3 inline-flex items-center gap-2 text-sm text-slate-500 sm:text-base">
-              <Sparkles className="h-4 w-4 text-emerald-600" />
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-500 sm:text-sm">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
               Powered by AI vector embeddings
             </p>
-            <div className="mt-7">
+            <div className="mt-5">
               <SearchBar value={searchQuery} onChange={setSearchQuery} onClear={clearSearch} loading={loading} />
             </div>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <span className="text-xs font-medium text-slate-500">Try:</span>
               {exampleQueries.map((query) => (
                 <button
                   key={query}
                   type="button"
                   onClick={() => handleChipClick(query)}
-                  className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700 transition-colors duration-150 hover:bg-emerald-100"
+                  className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700 transition-colors duration-150 hover:bg-emerald-100"
                 >
                   {query}
                 </button>
@@ -356,14 +356,14 @@ export default function App() {
 
           {/* Recently Viewed */}
           {recentlyViewed.length > 0 && (
-            <section className="mt-8">
-              <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
+            <section className="mb-5">
+              <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
                 <h2 className="text-sm font-bold text-slate-800">Recently Viewed</h2>
                 <button type="button" onClick={clearRecentlyViewed} className="text-xs font-medium text-slate-500 transition hover:text-rose-600">
                   Clear
                 </button>
               </div>
-              <div className="flex gap-4 overflow-x-auto pb-3">
+              <div className="flex gap-3 overflow-x-auto pb-2">
                 {recentlyViewed.map((product, index) => (
                   <ProductCard
                     key={product._id}
@@ -381,15 +381,15 @@ export default function App() {
 
           {/* Home: Category banners */}
           {!searchQuery.trim() && (
-            <div className="mx-auto max-w-5xl">
-              <div className="mb-5 flex items-end justify-between">
+            <div className="mb-6">
+              <div className="mb-4 flex items-end justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">A better basket starts here</p>
-                  <h2 className="mt-1 text-xl font-bold text-slate-900">What are you craving today?</h2>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700">A better basket starts here</p>
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">What are you craving today?</h2>
                 </div>
-                <span className="hidden text-sm text-slate-500 sm:block">Search by meal, mood, or ingredient</span>
+                <span className="hidden text-xs text-slate-400 sm:block">Search by meal, mood, or ingredient</span>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   { label: 'Fresh & wholesome', query: 'Fresh fruits and vegetables', image: 'photo-1542838132-92c53300491e' },
                   { label: 'Snack time', query: 'Salty evening snacks', image: 'photo-1599490659213-e2b9527bd087' },
@@ -399,7 +399,7 @@ export default function App() {
                     key={collection.label}
                     type="button"
                     onClick={() => handleChipClick(collection.query)}
-                    className="group relative h-40 overflow-hidden rounded-2xl bg-slate-200 text-left shadow-sm"
+                    className="group relative h-32 overflow-hidden rounded-xl bg-slate-200 text-left shadow-sm"
                   >
                     <img
                       src={`https://images.unsplash.com/${collection.image}?auto=format&fit=crop&w=700&q=80`}
@@ -407,9 +407,9 @@ export default function App() {
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
-                    <span className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/10 to-transparent" />
-                    <span className="absolute bottom-4 left-4 text-base font-semibold text-white">{collection.label}</span>
-                    <ArrowRight className="absolute bottom-4 right-4 h-5 w-5 text-white transition group-hover:translate-x-1" />
+                    <span className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
+                    <span className="absolute bottom-3 left-3 text-sm font-semibold text-white">{collection.label}</span>
+                    <ArrowRight className="absolute bottom-3 right-3 h-4 w-4 text-white transition group-hover:translate-x-1" />
                   </button>
                 ))}
               </div>
@@ -418,13 +418,13 @@ export default function App() {
 
           {/* Home: Trending */}
           {!searchQuery.trim() && (
-            <section className="mx-auto mt-10 max-w-5xl">
-              <div className="mb-4 flex items-center gap-2">
-                <h2 className="text-xl font-bold text-slate-900">Trending Now</h2>
+            <section className="mb-4">
+              <div className="mb-3 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-slate-900">Trending Now</h2>
                 <span aria-hidden="true">🔥</span>
               </div>
-              {trendingLoading && <p className="py-6 text-sm text-slate-500">Loading trending products...</p>}
-              {trendingError && <p role="alert" className="py-4 text-sm text-rose-600">Trending products unavailable: {trendingError}</p>}
+              {trendingLoading && <p className="py-4 text-sm text-slate-500">Loading trending products...</p>}
+              {trendingError && <p role="alert" className="py-3 text-sm text-rose-600">Trending products unavailable: {trendingError}</p>}
               {!trendingLoading && !trendingError && trendingProducts.length > 0 && (
                 <div className="flex gap-4 overflow-x-auto pb-3">
                   {trendingProducts.map((product, index) => (
