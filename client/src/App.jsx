@@ -6,7 +6,6 @@ import {
   AlertCircle,
   ArrowRight,
   ShoppingCart,
-  Wand2,
   ArrowLeftRight,
   Check,
 } from 'lucide-react';
@@ -21,12 +20,6 @@ const exampleQueries = [
   'Fresh baked bread',
   'Leafy green salad',
   'Sweet tropical fruit',
-];
-
-const nlExamples = [
-  'dinner ke liye pasta banani hai',
-  'morning healthy breakfast',
-  'movie night snacks aur drinks',
 ];
 
 const moodOptions = [
@@ -65,13 +58,6 @@ export default function App() {
   const [relatedLoading, setRelatedLoading] = useState(false);
   const [relatedError, setRelatedError] = useState(null);
   const [relatedOpen, setRelatedOpen] = useState(false);
-
-  // Natural Language Cart state
-  const [nlPrompt, setNlPrompt] = useState('');
-  const [nlResults, setNlResults] = useState([]);
-  const [nlSummary, setNlSummary] = useState('');
-  const [nlLoading, setNlLoading] = useState(false);
-  const [nlError, setNlError] = useState(null);
 
   // Mood-based Shopping state
   const [activeMood, setActiveMood] = useState(null);
@@ -211,33 +197,6 @@ export default function App() {
     setCart((cur) => cur.map((i) => (i._id === productId ? { ...i, quantity } : i)));
   };
 
-  // Natural Language Cart handler
-  const handleNlCartSubmit = async (e, customPrompt) => {
-    if (e) e.preventDefault();
-    const promptToUse = (customPrompt ?? nlPrompt).trim();
-    if (!promptToUse) return;
-    if (customPrompt) setNlPrompt(customPrompt);
-
-    setNlLoading(true);
-    setNlError(null);
-    try {
-      const res = await fetch('/api/nl-cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: promptToUse }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to build cart');
-      setNlResults(data.results || []);
-      setNlSummary(data.summary || '');
-    } catch (err) {
-      setNlError(err.message);
-      setNlResults([]);
-    } finally {
-      setNlLoading(false);
-    }
-  };
-
   // Mood-based shopping handler
   const handleMoodClick = async (moodId) => {
     if (activeMood === moodId) {
@@ -360,100 +319,11 @@ export default function App() {
                 </button>
               ))}
             </div>
-
-            {/* Natural Language Cart Builder */}
-            <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3.5 text-left">
-              <form onSubmit={(e) => handleNlCartSubmit(e)} className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 shrink-0">
-                  <Wand2 className="h-4 w-4 text-emerald-600" />
-                  <span>AI Cart Builder</span>
-                </div>
-                <input
-                  type="text"
-                  value={nlPrompt}
-                  onChange={(e) => setNlPrompt(e.target.value)}
-                  placeholder='e.g. "dinner ke liye pasta banani hai"'
-                  className="flex-1 rounded-full border border-emerald-200 bg-white px-4 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <button
-                  type="submit"
-                  disabled={nlLoading || !nlPrompt.trim()}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  {nlLoading ? 'Building...' : 'Build 5-Item Cart'}
-                </button>
-              </form>
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] text-slate-500">Quick meals:</span>
-                {nlExamples.map((ex) => (
-                  <button
-                    key={ex}
-                    type="button"
-                    onClick={() => handleNlCartSubmit(null, ex)}
-                    className="rounded-full bg-white border border-emerald-100 px-2.5 py-0.5 text-[11px] text-emerald-700 hover:bg-emerald-100 transition"
-                  >
-                    "{ex}"
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
         {/* Constrained content area */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Natural Language Cart Results Panel */}
-          {(nlResults.length > 0 || nlError) && (
-            <section className="mb-6 rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <Wand2 className="h-4 w-4 text-emerald-600" />
-                  <h2 className="text-sm font-bold text-slate-900">{nlSummary || 'AI Cart Bundle'}</h2>
-                </div>
-                <div className="flex items-center gap-2">
-                  {nlResults.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => handleAddMultipleToCart(nlResults, 'AI-picked items')}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                      Add All {nlResults.length} to Cart
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNlResults([]);
-                      setNlError(null);
-                    }}
-                    className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
-                    aria-label="Close AI cart results"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-              {nlError ? (
-                <p className="text-xs text-rose-600">{nlError}</p>
-              ) : (
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {nlResults.map((product, index) => (
-                    <ProductCard
-                      key={product._id}
-                      product={product}
-                      onClick={handleProductClick}
-                      onAddToCart={handleAddToCart}
-                      isSelected={selectedProduct?._id === product._id}
-                      index={index}
-                      compact
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
           {/* Error */}
           {error && (
             <div className="max-w-2xl mx-auto mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3 text-rose-700">
