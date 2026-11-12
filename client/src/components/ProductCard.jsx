@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, ShoppingCart, ArrowLeftRight } from 'lucide-react';
+import { Plus, ShoppingCart } from 'lucide-react';
 
 const categoryEmojis = {
   dairy: '🥛',
@@ -63,15 +63,13 @@ export function ProductImage({
   }
 
   return (
-    <div className={`relative h-full w-full ${fallbackClassName || ''}`}>
-      <img
-        src={imageUrl}
-        alt={alt}
-        onError={() => setImageError(true)}
-        loading="lazy"
-        className={className}
-      />
-    </div>
+    <img
+      src={imageUrl}
+      alt={alt}
+      onError={() => setImageError(true)}
+      loading="lazy"
+      className={className}
+    />
   );
 }
 
@@ -79,7 +77,6 @@ export default function ProductCard({
   product,
   onClick,
   onAddToCart,
-  onFindSubstitute,
   isSelected,
   index = -1,
   relationshipLabel,
@@ -151,24 +148,10 @@ export default function ProductCard({
         </div>
 
         <div className="mt-auto pt-3">
-          <div className="mb-3 flex items-center justify-between border-t border-slate-100 pt-3">
+          <div className="mb-3 border-t border-slate-100 pt-3">
             <span className="text-base font-bold text-emerald-700">
               {formatPrice(price)}
             </span>
-            {onFindSubstitute && !compact && (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onFindSubstitute(product);
-                }}
-                title="Out of stock? Find AI substitute"
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
-              >
-                <ArrowLeftRight className="h-3 w-3" />
-                Swap
-              </button>
-            )}
           </div>
           <button
             type="button"

@@ -140,17 +140,6 @@ router.get('/product/:id/related', async (req, res) => {
       });
     }
 
-    // Complementary categories for cross-selling (e.g., bread -> butter, cheese, coffee)
-    const complementaryMap = {
-      bakery: ['dairy', 'beverages', 'fruits'],
-      dairy: ['bakery', 'fruits', 'beverages'],
-      snacks: ['beverages', 'dairy'],
-      beverages: ['snacks', 'bakery'],
-      fruits: ['dairy', 'bakery', 'snacks'],
-      vegetables: ['dairy', 'bakery'],
-    };
-    const targetCrossCategories = complementaryMap[product.category] || [];
-
     // Run vector search with stored embedding, excluding the current product
     const pipeline = [
       {
@@ -159,13 +148,16 @@ router.get('/product/:id/related', async (req, res) => {
           path: 'embedding',
           queryVector: product.embedding,
           numCandidates: 100,
-          limit: 25,
+          limit: 6,
         },
       },
       {
         $match: {
           _id: { $ne: product._id },
         },
+      },
+      {
+        $limit: 5,
       },
       {
         $project: {
@@ -180,28 +172,7 @@ router.get('/product/:id/related', async (req, res) => {
       },
     ];
 
-    const candidates = await Product.aggregate(pipeline);
-
-    // Separate complementary cross-sell items from same-category similar items
-    const crossSellItems = candidates
-      .filter((item) => targetCrossCategories.includes(item.category))
-      .slice(0, 3)
-      .map((item) => ({ ...item, relationType: 'cross-sell' }));
-
-    const similarItems = candidates
-      .filter((item) => item.category === product.category)
-      .slice(0, 2)
-      .map((item) => ({ ...item, relationType: 'similar' }));
-
-    // Combine cross-sell first so complementary items (e.g. Butter/Cheese for Bread) lead
-    const combined = [...crossSellItems, ...similarItems];
-    // Fill up to 5 if needed
-    for (const item of candidates) {
-      if (combined.length >= 5) break;
-      if (!combined.some((c) => c._id.toString() === item._id.toString())) {
-        combined.push({ ...item, relationType: 'cross-sell' });
-      }
-    }
+    const related = await Product.aggregate(pipeline);
 
     return res.status(200).json({
       product: {
@@ -212,8 +183,7 @@ router.get('/product/:id/related', async (req, res) => {
         description: product.description,
         image: product.image,
       },
-      results: combined.slice(0, 5),
-      crossSell: crossSellItems,
+      results: related,
     });
   } catch (error) {
     console.error('Error fetching related products:', error);
@@ -222,268 +192,6 @@ router.get('/product/:id/related', async (req, res) => {
       results: [],
       message: 'No similar products found',
     });
-  }
-});
-
-/**
- * Helper: runs vector search for a text query and returns top N items.
- */
-async function vectorSearchText(text, limit = 3) {
-  const queryVector = await generateEmbedding(text);
-  return Product.aggregate([
-    {
-      $vectorSearch: {
-        index: 'vector_index',
-        path: 'embedding',
-        queryVector,
-        numCandidates: 100,
-        limit,
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        name: 1,
-        category: 1,
-        price: 1,
-        description: 1,
-        image: 1,
-        score: { $meta: 'vectorSearchScore' },
-      },
-    },
-  ]);
-}
-
-/**
- * POST /api/nl-cart
- * Natural Language Cart Builder:
- * e.g. "dinner ke liye pasta banani hai" -> returns 5 curated ingredients
- */
-router.post('/nl-cart', async (req, res) => {
-  try {
-    const prompt = req.body?.prompt?.trim();
-    if (!prompt) {
-      return res.status(400).json({ error: 'Please enter what you want to make or buy.', results: [] });
-    }
-
-    const lower = prompt.toLowerCase();
-
-    // Map common meal/Hinglish intents to multi-ingredient semantic sub-queries
-    const intentSubQueries = [];
-    if (/\b(pasta|spaghetti|macaroni|noodles|italian)\b/.test(lower)) {
-      intentSubQueries.push(
-        { q: 'roma plum tomatoes sauce', summary: 'Tomatoes for pasta sauce' },
-        { q: 'fresh garlic bulb', summary: 'Garlic for seasoning' },
-        { q: 'parmesan cheese pasta', summary: 'Parmesan cheese' },
-        { q: 'fresh mozzarella cheese', summary: 'Mozzarella cheese' },
-        { q: 'baby spinach mushrooms', summary: 'Fresh veggies' }
-      );
-    } else if (/\b(pizza|piza)\b/.test(lower)) {
-      intentSubQueries.push(
-        { q: 'fresh mozzarella cheese' },
-        { q: 'roma tomatoes' },
-        { q: 'bell peppers' },
-        { q: 'bella mushrooms' },
-        { q: 'sourdough bread ciabatta' }
-      );
-    } else if (/\b(sandwich|burger|toast|sub)\b/.test(lower)) {
-      intentSubQueries.push(
-        { q: 'brioche buns sourdough bread' },
-        { q: 'cheddar cheese' },
-        { q: 'salted butter' },
-        { q: 'roma tomatoes' },
-        { q: 'romaine lettuce red onions' }
-      );
-    } else if (/\b(breakfast|nashta|morning|subah|brunch)\b/.test(lower)) {
-      intentSubQueries.push(
-        { q: 'whole milk oat milk' },
-        { q: 'butter croissant english muffins' },
-        { q: 'greek yogurt' },
-        { q: 'bananas strawberries blueberries' },
-        { q: 'cold brew coffee orange juice' }
-      );
-    } else if (/\b(salad|healthy|diet|gym|protein|fitness)\b/.test(lower)) {
-      intentSubQueries.push(
-        { q: 'baby spinach romaine lettuce' },
-        { q: 'avocados' },
-        { q: 'cucumbers roma tomatoes' },
-        { q: 'greek yogurt cottage cheese' },
-        { q: 'roasted almonds' }
-      );
-    } else if (/\b(party|movie|night|chill|snacks|friends|dost)\b/.test(lower)) {
-      intentSubQueries.push(
-        { q: 'butter popcorn' },
-        { q: 'potato chips tortilla chips' },
-        { q: 'craft cola sparkling water' },
-        { q: 'dark chocolate cookies' },
-        { q: 'glazed donuts' }
-      );
-    } else if (/\b(smoothie|shake|juice)\b/.test(lower)) {
-      intentSubQueries.push(
-        { q: 'bananas mangoes' },
-        { q: 'strawberries blueberries' },
-        { q: 'greek yogurt' },
-        { q: 'almond milk oat milk' },
-        { q: 'baby spinach' }
-      );
-    }
-
-    let finalItems = [];
-
-    if (intentSubQueries.length > 0) {
-      const batches = await Promise.all(
-        intentSubQueries.map((sub) => vectorSearchText(sub.q, 2))
-      );
-      const seen = new Set();
-      for (const batch of batches) {
-        for (const item of batch) {
-          const id = item._id.toString();
-          if (!seen.has(id)) {
-            seen.add(id);
-            finalItems.push(item);
-            break; // 1 top pick per ingredient slot for balanced basket
-          }
-        }
-      }
-    } else {
-      // Direct semantic vector search on user's natural language prompt
-      finalItems = await vectorSearchText(prompt, 5);
-    }
-
-    return res.status(200).json({
-      prompt,
-      summary: `AI picked ${finalItems.length} items for "${prompt}"`,
-      results: finalItems.slice(0, 5),
-    });
-  } catch (error) {
-    console.error('Error in nl-cart:', error);
-    return res.status(500).json({ error: 'Failed to build natural language cart', results: [] });
-  }
-});
-
-/**
- * GET /api/mood/:moodId
- * Mood-based Shopping Bundles
- */
-router.get('/mood/:moodId', async (req, res) => {
-  const moods = {
-    'movie-night': {
-      title: 'Movie Night',
-      emoji: '🎬',
-      description: 'Crunchy popcorn, chips, sweet treats & fizzy drinks for binge-watching.',
-      queries: ['butter popcorn', 'potato chips', 'craft cola', 'dark chocolate', 'gummy bears'],
-    },
-    'healthy-week': {
-      title: 'Healthy Week',
-      emoji: '🥗',
-      description: 'Nutrient-packed greens, protein dairy, avocados & antioxidant berries.',
-      queries: ['baby spinach', 'avocados', 'greek yogurt', 'blueberries', 'green tea'],
-    },
-    'birthday-party': {
-      title: 'Birthday Party',
-      emoji: '🎉',
-      description: 'Crowd-pleasing donuts, cookies, party chips, lemonade & fresh fruit.',
-      queries: ['glazed donuts', 'chocolate cookies', 'tortilla chips', 'lemonade', 'strawberries'],
-    },
-    'sunday-breakfast': {
-      title: 'Lazy Sunday',
-      emoji: '☕',
-      description: 'Warm bakery pastries, creamy butter, coffee & fresh orange juice.',
-      queries: ['butter croissant', 'cold brew coffee', 'orange juice', 'butter', 'cinnamon bagels'],
-    },
-  };
-
-  try {
-    const mood = moods[req.params.moodId];
-    if (!mood) {
-      return res.status(404).json({ error: 'Mood bundle not found', results: [] });
-    }
-
-    const batches = await Promise.all(mood.queries.map((q) => vectorSearchText(q, 2)));
-    const seen = new Set();
-    const results = [];
-
-    for (const batch of batches) {
-      for (const item of batch) {
-        const id = item._id.toString();
-        if (!seen.has(id)) {
-          seen.add(id);
-          results.push(item);
-          break;
-        }
-      }
-    }
-
-    return res.status(200).json({
-      moodId: req.params.moodId,
-      title: mood.title,
-      emoji: mood.emoji,
-      description: mood.description,
-      results: results.slice(0, 5),
-    });
-  } catch (error) {
-    console.error('Error fetching mood bundle:', error);
-    return res.status(500).json({ error: 'Failed to load mood bundle', results: [] });
-  }
-});
-
-/**
- * GET /api/product/:id/substitute
- * Smart AI Substitutions: finds the closest in-stock alternative when an item is unavailable.
- */
-router.get('/product/:id/substitute', async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid product ID' });
-    }
-
-    const product = await Product.findById(id);
-    if (!product || !product.embedding?.length) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    const candidates = await Product.aggregate([
-      {
-        $vectorSearch: {
-          index: 'vector_index',
-          path: 'embedding',
-          queryVector: product.embedding,
-          numCandidates: 100,
-          limit: 6,
-        },
-      },
-      { $match: { _id: { $ne: product._id } } },
-      {
-        $project: {
-          _id: 1,
-          name: 1,
-          category: 1,
-          price: 1,
-          description: 1,
-          image: 1,
-          score: { $meta: 'vectorSearchScore' },
-        },
-      },
-    ]);
-
-    // Prefer same category substitute first if available
-    const sameCategory = candidates.filter((c) => c.category === product.category);
-    const ordered = [...sameCategory, ...candidates.filter((c) => c.category !== product.category)];
-    const topSubstitute = ordered[0] || null;
-    const matchPct = topSubstitute ? Math.round((topSubstitute.score || 0) * 100) : 0;
-
-    return res.status(200).json({
-      original: { _id: product._id, name: product.name, category: product.category },
-      substitute: topSubstitute,
-      alternatives: ordered.slice(0, 3),
-      message: topSubstitute
-        ? `Out of ${product.name}? Try ${topSubstitute.name} instead (${matchPct}% similar)`
-        : `No substitute found for ${product.name}`,
-    });
-  } catch (error) {
-    console.error('Error finding substitute:', error);
-    return res.status(500).json({ error: 'Failed to find substitute' });
   }
 });
 

@@ -133,8 +133,8 @@ export default function CartDrawer({
                 >
                   <ProductImage
                     product={item}
-                    className="h-14 w-14 rounded-lg bg-slate-100 object-cover"
-                    fallbackClassName="h-14 w-14 rounded-lg"
+                    className="h-14 w-14 shrink-0 rounded-lg bg-slate-100 object-cover"
+                    fallbackClassName="h-14 w-14 shrink-0 rounded-lg"
                   />
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-semibold text-slate-900 truncate">{item.name}</h4>
