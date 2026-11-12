@@ -27,10 +27,26 @@ const clientDistPath = path.resolve(
 );
 const clientIndexPath = path.join(clientDistPath, 'index.html');
 
-// CORS configuration - allow Vite frontend on port 5173
+// CORS configuration - allow local Vite dev and Vercel production/preview URLs
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app')
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
