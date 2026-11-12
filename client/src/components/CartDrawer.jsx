@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Sparkles } from 'lucide-react';
-import { getProductImageUrl } from './ProductCard';
+import { formatPrice, ProductImage } from './ProductCard';
 
 export default function CartDrawer({
   isOpen,
@@ -12,7 +12,10 @@ export default function CartDrawer({
   onAddRecommendation,
 }) {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalPrice = cart.reduce(
+    (sum, item) => sum + Math.round(item.price * 83) * item.quantity,
+    0
+  );
   const cartItemIds = cart.map((item) => item._id).join(',');
   const recommendationSourceKey = cart.slice(-3).map((item) => item._id).join(',');
   const [recommendations, setRecommendations] = useState([]);
@@ -128,23 +131,17 @@ export default function CartDrawer({
                   key={item._id}
                   className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl"
                 >
-                  {getProductImageUrl(item.category) ? (
-                    <img
-                      src={getProductImageUrl(item.category)}
-                      alt=""
-                      className="h-14 w-14 rounded-lg object-cover bg-slate-100"
-                    />
-                  ) : (
-                    <div className="h-14 w-14 rounded-lg bg-emerald-50 flex items-center justify-center text-2xl">
-                      🛒
-                    </div>
-                  )}
+                  <ProductImage
+                    product={item}
+                    className="h-14 w-14 rounded-lg bg-slate-100 object-cover"
+                    fallbackClassName="h-14 w-14 rounded-lg"
+                  />
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-semibold text-slate-900 truncate">{item.name}</h4>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-slate-400 capitalize">{item.category}</span>
                       <span className="text-xs font-medium text-slate-700">
-                        ${item.price.toFixed(2)}
+                        {formatPrice(item.price)}
                       </span>
                     </div>
                   </div>
@@ -208,43 +205,76 @@ export default function CartDrawer({
 
                 {!recommendationsLoading && !recommendationsError && recommendations.length > 0 && (
                   <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-                    {recommendations.map((product) => (
-                      <article
-                        key={product._id}
-                        className="w-36 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-white"
-                      >
-                        {getProductImageUrl(product.category) ? (
-                          <img
-                            src={getProductImageUrl(product.category)}
-                            alt=""
-                            className="h-20 w-full object-cover"
+                    {recommendations.map((product) => {
+                      const cartItem = cart.find((i) => i._id === product._id);
+                      return (
+                        <article
+                          key={product._id}
+                          className="w-40 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm"
+                        >
+                          <ProductImage
+                            product={product}
+                            className="h-24 w-full object-cover"
+                            fallbackClassName="h-24 w-full"
                           />
-                        ) : (
-                          <div className="flex h-20 items-center justify-center bg-emerald-50 text-3xl">
-                            🛒
+                          <div className="p-2.5">
+                            <h4 className="truncate text-xs font-semibold text-slate-800" title={product.name}>
+                              {product.name}
+                            </h4>
+                            <p className="mt-0.5 text-xs font-bold text-emerald-700">
+                              {formatPrice(product.price)}
+                            </p>
+                            <div className="mt-2">
+                              {cartItem ? (
+                                /* Quantity controls — shown when item already in cart */
+                                <div className="flex items-center justify-between gap-1">
+                                  <div className="flex items-center rounded-lg border border-slate-200 bg-white">
+                                    <button
+                                      type="button"
+                                      onClick={() => onUpdateQuantity(cartItem._id, cartItem.quantity - 1)}
+                                      className="flex h-7 w-7 items-center justify-center text-slate-500 hover:text-emerald-700 transition"
+                                      aria-label="Decrease quantity"
+                                    >
+                                      <Minus className="h-3 w-3" />
+                                    </button>
+                                    <span className="min-w-[1.25rem] text-center text-xs font-bold text-slate-800">
+                                      {cartItem.quantity}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => onUpdateQuantity(cartItem._id, cartItem.quantity + 1)}
+                                      className="flex h-7 w-7 items-center justify-center text-slate-500 hover:text-emerald-700 transition"
+                                      aria-label="Increase quantity"
+                                    >
+                                      <Plus className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => onRemove(cartItem._id)}
+                                    className="p-1 text-slate-300 hover:text-rose-500 transition"
+                                    aria-label="Remove item"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                /* Add button — shown when item not in cart */
+                                <button
+                                  type="button"
+                                  onClick={() => onAddRecommendation(product)}
+                                  className="flex w-full items-center justify-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                                  aria-label={`Add ${product.name} to cart`}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  Add to cart
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        <div className="p-2.5">
-                          <h4 className="truncate text-xs font-semibold text-slate-800" title={product.name}>
-                            {product.name}
-                          </h4>
-                          <div className="mt-2 flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-900">
-                              ${product.price.toFixed(2)}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => onAddRecommendation(product)}
-                              className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
-                              aria-label={`Add ${product.name} to cart`}
-                            >
-                              <Plus className="h-3 w-3" />
-                              Add
-                            </button>
-                          </div>
-                        </div>
-                      </article>
-                    ))}
+                        </article>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -263,7 +293,7 @@ export default function CartDrawer({
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between text-slate-500">
                   <span>Subtotal</span>
-                  <span>${totalPrice.toFixed(2)}</span>
+                  <span>₹{totalPrice}</span>
                 </div>
                 <div className="flex justify-between text-slate-500">
                   <span>Delivery</span>
@@ -271,14 +301,14 @@ export default function CartDrawer({
                 </div>
                 <div className="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-slate-100">
                   <span>Total</span>
-                  <span>${totalPrice.toFixed(2)}</span>
+                  <span>₹{totalPrice}</span>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => {
-                  alert(`Thank you for trying SmartCart! Order placed for $${totalPrice.toFixed(2)} 🎉`);
+                  alert(`Thank you for trying SmartCart! Order placed for ₹${totalPrice} 🎉`);
                   onClear();
                   onClose();
                 }}

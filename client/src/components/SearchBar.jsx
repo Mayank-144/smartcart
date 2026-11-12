@@ -1,7 +1,56 @@
-import React from 'react';
-import { Search, Loader2, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Search, Loader2, X, Clock3 } from 'lucide-react';
+
+const HISTORY_KEY = 'smartcart_history';
+
+function readSearchHistory() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(HISTORY_KEY) || '[]');
+    return Array.isArray(stored)
+      ? [...new Set(stored.filter((item) => typeof item === 'string' && item.trim()))].slice(0, 5)
+      : [];
+  } catch (error) {
+    console.error('Unable to read search history:', error);
+    return [];
+  }
+}
+
+function saveSearchHistory(history) {
+  try {
+    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch (error) {
+    console.error('Unable to save search history:', error);
+  }
+}
 
 export default function SearchBar({ value, onChange, onClear, loading }) {
+  const [history, setHistory] = useState(readSearchHistory);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const query = value.trim();
+    if (!query) return undefined;
+
+    const timeout = setTimeout(() => {
+      setHistory((current) => {
+        const next = [query, ...current.filter((item) => item !== query)].slice(0, 5);
+        saveSearchHistory(next);
+        return next;
+      });
+    }, 800);
+
+    return () => clearTimeout(timeout);
+  }, [value]);
+
+  const removeSearch = (query) => {
+    setHistory((current) => {
+      const next = current.filter((item) => item !== query);
+      saveSearchHistory(next);
+      return next;
+    });
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto relative">
       <div className="relative flex items-center">
@@ -12,11 +61,14 @@ export default function SearchBar({ value, onChange, onClear, loading }) {
 
         {/* Input */}
         <input
+          ref={inputRef}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setHistoryOpen(true)}
+          onBlur={() => setTimeout(() => setHistoryOpen(false), 120)}
           placeholder="Search for milk, chips, bread..."
-          className="w-full pl-12 pr-12 py-3.5 text-base bg-white border border-white/70 rounded-full shadow-lg shadow-emerald-950/10 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
+          className="w-full rounded-full border border-slate-200 bg-white py-3.5 pl-12 pr-12 text-base text-slate-800 shadow-sm placeholder-slate-400 transition duration-200 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500"
           autoFocus
         />
 
@@ -36,6 +88,40 @@ export default function SearchBar({ value, onChange, onClear, loading }) {
           ) : null}
         </div>
       </div>
+
+      {historyOpen && !value.trim() && history.length > 0 && (
+        <div className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 text-left shadow-xl">
+          <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Recent searches
+          </p>
+          {history.map((query) => (
+            <div key={query} className="flex items-center rounded-xl hover:bg-emerald-50">
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  onChange(query);
+                  setHistoryOpen(false);
+                  inputRef.current?.focus();
+                }}
+                className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-sm text-slate-700"
+              >
+                <Clock3 className="h-4 w-4 shrink-0 text-slate-400" />
+                <span className="truncate">{query}</span>
+              </button>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => removeSearch(query)}
+                aria-label={`Remove ${query} from search history`}
+                className="mr-2 rounded-full p-1.5 text-slate-400 transition hover:bg-white hover:text-rose-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

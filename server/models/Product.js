@@ -24,6 +24,11 @@ const productSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    image: {
+      type: String,
+      default: '',
+      trim: true,
+    },
     embedding: {
       type: [Number],
       required: true,

@@ -7,10 +7,12 @@ SmartCart is a full-stack MERN application that provides semantic search and AI 
 
 ## 🏗️ Architecture & Tech Stack
 
-- **Frontend:** React (Vite) + Tailwind CSS (lucide-react icons, debounced search, responsive grid)
+- **Frontend:** React (Vite) + Tailwind CSS (semantic search, search history, recently viewed and trending products, cart suggestions)
 - **Backend:** Node.js (ES Modules) + Express + Mongoose + CORS
 - **Embeddings:** `@xenova/transformers` running the `Xenova/all-MiniLM-L6-v2` 384-dimensional model locally
 - **Database:** MongoDB Atlas with Vector Search index (`similarity: cosine`, `dimensions: 384`)
+- **Product images:** Each seeded product has its own direct Pexels photo URL; emoji fallbacks appear if a photo is unavailable
+- **Display currency:** Prices are shown in INR using a fixed USD-to-INR multiplier of 83 (not a live exchange rate)
 
 ---
 
@@ -50,6 +52,10 @@ smartcart/
 Before starting the server, copy `server/.env.example` to `server/.env` and set
 your MongoDB connection string in `MONGODB_URI`. The `.env` file is ignored by
 Git and should not be committed.
+
+Product photos are static Pexels CDN links stored with each product; no image
+API key or image-search service is needed. The footer links to Pexels as the
+photo source.
 
 ---
 

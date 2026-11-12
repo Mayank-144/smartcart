@@ -572,6 +572,110 @@ const rawProducts = [
   },
 ];
 
+const productImages = {
+  'Whole Milk': 'https://images.pexels.com/photos/236010/pexels-photo-236010.jpeg?auto=compress&w=400',
+  'Greek Yogurt': 'https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&w=400',
+  'Cheddar Cheese': 'https://images.pexels.com/photos/821365/pexels-photo-821365.jpeg?auto=compress&w=400',
+  Butter: 'https://images.pexels.com/photos/531334/pexels-photo-531334.jpeg?auto=compress&w=400',
+  'Cottage Cheese': 'https://images.pexels.com/photos/4871119/pexels-photo-4871119.jpeg?auto=compress&w=400',
+  'Fresh Mozzarella': 'https://images.pexels.com/photos/2531189/pexels-photo-2531189.jpeg?auto=compress&w=400',
+  'Whipping Cream': 'https://images.pexels.com/photos/3026804/pexels-photo-3026804.jpeg?auto=compress&w=400',
+  'Sour Cream': 'https://images.pexels.com/photos/4871116/pexels-photo-4871116.jpeg?auto=compress&w=400',
+  'Almond Milk': 'https://images.pexels.com/photos/4958153/pexels-photo-4958153.jpeg?auto=compress&w=400',
+  'Oat Milk': 'https://images.pexels.com/photos/5946971/pexels-photo-5946971.jpeg?auto=compress&w=400',
+  'Parmesan Cheese': 'https://images.pexels.com/photos/4894795/pexels-photo-4894795.jpeg?auto=compress&w=400',
+  'Feta Cheese': 'https://images.pexels.com/photos/4551832/pexels-photo-4551832.jpeg?auto=compress&w=400',
+  'Ricotta Cheese': 'https://images.pexels.com/photos/6287525/pexels-photo-6287525.jpeg?auto=compress&w=400',
+  'Cream Cheese': 'https://images.pexels.com/photos/4198021/pexels-photo-4198021.jpeg?auto=compress&w=400',
+  'Strawberry Kefir': 'https://images.pexels.com/photos/3625372/pexels-photo-3625372.jpeg?auto=compress&w=400',
+  'Potato Chips': 'https://images.pexels.com/photos/568805/pexels-photo-568805.jpeg?auto=compress&w=400',
+  'Roasted Almonds': 'https://images.pexels.com/photos/1013420/pexels-photo-1013420.jpeg?auto=compress&w=400',
+  'Tortilla Chips': 'https://images.pexels.com/photos/5175537/pexels-photo-5175537.jpeg?auto=compress&w=400',
+  'Dark Chocolate': 'https://images.pexels.com/photos/918327/pexels-photo-918327.jpeg?auto=compress&w=400',
+  'Butter Popcorn': 'https://images.pexels.com/photos/33129/popcorn-movie-party-entertainment.jpg?auto=compress&w=400',
+  'Pretzel Crisps': 'https://images.pexels.com/photos/762020/pexels-photo-762020.jpeg?auto=compress&w=400',
+  'Trail Mix': 'https://images.pexels.com/photos/1295572/pexels-photo-1295572.jpeg?auto=compress&w=400',
+  'Rice Cakes': 'https://images.pexels.com/photos/8107831/pexels-photo-8107831.jpeg?auto=compress&w=400',
+  'Beef Jerky': 'https://images.pexels.com/photos/8697536/pexels-photo-8697536.jpeg?auto=compress&w=400',
+  'Pita Chips': 'https://images.pexels.com/photos/5938/food-salad-healthy-lunch.jpg?auto=compress&w=400',
+  'Granola Bars': 'https://images.pexels.com/photos/8107832/pexels-photo-8107832.jpeg?auto=compress&w=400',
+  'Cheese Crackers': 'https://images.pexels.com/photos/4474052/pexels-photo-4474052.jpeg?auto=compress&w=400',
+  'Gummy Bears': 'https://images.pexels.com/photos/33786469/pexels-photo-33786469.jpeg?auto=compress&w=400',
+  'Salted Pistachios': 'https://images.pexels.com/photos/5945754/pexels-photo-5945754.jpeg?auto=compress&w=400',
+  'Dried Mango': 'https://images.pexels.com/photos/5945560/pexels-photo-5945560.jpeg?auto=compress&w=400',
+  'Cold Brew Coffee': 'https://images.pexels.com/photos/2638019/pexels-photo-2638019.jpeg?auto=compress&w=400',
+  'Sparkling Water': 'https://images.pexels.com/photos/338713/pexels-photo-338713.jpeg?auto=compress&w=400',
+  'Orange Juice': 'https://images.pexels.com/photos/96974/pexels-photo-96974.jpeg?auto=compress&w=400',
+  'Green Tea': 'https://images.pexels.com/photos/33526960/pexels-photo-33526960.jpeg?auto=compress&w=400',
+  'Lemon Kombucha': 'https://images.pexels.com/photos/5947019/pexels-photo-5947019.jpeg?auto=compress&w=400',
+  'Coconut Water': 'https://images.pexels.com/photos/1092730/pexels-photo-1092730.jpeg?auto=compress&w=400',
+  'Earl Grey Tea': 'https://images.pexels.com/photos/734983/pexels-photo-734983.jpeg?auto=compress&w=400',
+  'Cranberry Juice': 'https://images.pexels.com/photos/5946965/pexels-photo-5946965.jpeg?auto=compress&w=400',
+  Lemonade: 'https://images.pexels.com/photos/2109099/pexels-photo-2109099.jpeg?auto=compress&w=400',
+  'Craft Cola': 'https://images.pexels.com/photos/50593/coca-cola-cold-drink-soft-drink-coke-50593.jpeg?auto=compress&w=400',
+  'Apple Cider': 'https://images.pexels.com/photos/5946625/pexels-photo-5946625.jpeg?auto=compress&w=400',
+  'Chamomile Tea': 'https://images.pexels.com/photos/1416530/pexels-photo-1416530.jpeg?auto=compress&w=400',
+  'Energy Drink': 'https://images.pexels.com/photos/2983100/pexels-photo-2983100.jpeg?auto=compress&w=400',
+  'Tomato Juice': 'https://images.pexels.com/photos/8796312/pexels-photo-8796312.jpeg?auto=compress&w=400',
+  'Matcha Latte': 'https://images.pexels.com/photos/3879495/pexels-photo-3879495.jpeg?auto=compress&w=400',
+  'Sourdough Bread': 'https://images.pexels.com/photos/1775043/pexels-photo-1775043.jpeg?auto=compress&w=400',
+  'Butter Croissant': 'https://images.pexels.com/photos/3892469/pexels-photo-3892469.jpeg?auto=compress&w=400',
+  'Wheat Bread': 'https://images.pexels.com/photos/1586947/pexels-photo-1586947.jpeg?auto=compress&w=400',
+  'Blueberry Muffin': 'https://images.pexels.com/photos/1657343/pexels-photo-1657343.jpeg?auto=compress&w=400',
+  'Cinnamon Bagels': 'https://images.pexels.com/photos/1359330/pexels-photo-1359330.jpeg?auto=compress&w=400',
+  'French Baguette': 'https://images.pexels.com/photos/1387070/pexels-photo-1387070.jpeg?auto=compress&w=400',
+  'Chocolate Cookies': 'https://images.pexels.com/photos/230325/pexels-photo-230325.jpeg?auto=compress&w=400',
+  'Brioche Buns': 'https://images.pexels.com/photos/2135/food-france-morning-breakfast.jpg?auto=compress&w=400',
+  'Pita Bread': 'https://images.pexels.com/photos/1565982/pexels-photo-1565982.jpeg?auto=compress&w=400',
+  'Banana Bread': 'https://images.pexels.com/photos/830894/pexels-photo-830894.jpeg?auto=compress&w=400',
+  'Glazed Donuts': 'https://images.pexels.com/photos/3338681/pexels-photo-3338681.jpeg?auto=compress&w=400',
+  'Ciabatta Rolls': 'https://images.pexels.com/photos/19121472/pexels-photo-19121472.jpeg?auto=compress&w=400',
+  'Apple Turnover': 'https://images.pexels.com/photos/6163263/pexels-photo-6163263.jpeg?auto=compress&w=400',
+  'English Muffins': 'https://images.pexels.com/photos/4792728/pexels-photo-4792728.jpeg?auto=compress&w=400',
+  Cornbread: 'https://images.pexels.com/photos/30974633/pexels-photo-30974633.jpeg?auto=compress&w=400',
+  'Honeycrisp Apples': 'https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg?auto=compress&w=400',
+  Bananas: 'https://images.pexels.com/photos/1093038/pexels-photo-1093038.jpeg?auto=compress&w=400',
+  Strawberries: 'https://images.pexels.com/photos/70746/strawberries-red-fruit-royalty-free-70746.jpeg?auto=compress&w=400',
+  Avocados: 'https://images.pexels.com/photos/557659/pexels-photo-557659.jpeg?auto=compress&w=400',
+  Watermelon: 'https://images.pexels.com/photos/1313267/pexels-photo-1313267.jpeg?auto=compress&w=400',
+  Blueberries: 'https://images.pexels.com/photos/1153655/pexels-photo-1153655.jpeg?auto=compress&w=400',
+  Lemons: 'https://images.pexels.com/photos/1414110/pexels-photo-1414110.jpeg?auto=compress&w=400',
+  'Navel Oranges': 'https://images.pexels.com/photos/161559/background-bitter-breakfast-bright-161559.jpeg?auto=compress&w=400',
+  Peaches: 'https://images.pexels.com/photos/9265739/pexels-photo-9265739.jpeg?auto=compress&w=400',
+  Cherries: 'https://images.pexels.com/photos/38073147/pexels-photo-38073147.jpeg?auto=compress&w=400',
+  'Red Grapes': 'https://images.pexels.com/photos/708777/pexels-photo-708777.jpeg?auto=compress&w=400',
+  Pineapple: 'https://images.pexels.com/photos/947879/pexels-photo-947879.jpeg?auto=compress&w=400',
+  Mangoes: 'https://images.pexels.com/photos/918643/pexels-photo-918643.jpeg?auto=compress&w=400',
+  Kiwifruit: 'https://images.pexels.com/photos/51312/kiwi-fruit-vitamins-healthy-eating-51312.jpeg?auto=compress&w=400',
+  Blackberries: 'https://images.pexels.com/photos/892808/pexels-photo-892808.jpeg?auto=compress&w=400',
+  'Baby Spinach': 'https://images.pexels.com/photos/2325843/pexels-photo-2325843.jpeg?auto=compress&w=400',
+  Broccoli: 'https://images.pexels.com/photos/47347/broccoli-vegetable-food-healthy-47347.jpeg?auto=compress&w=400',
+  'Roma Tomatoes': 'https://images.pexels.com/photos/533280/pexels-photo-533280.jpeg?auto=compress&w=400',
+  'Bell Peppers': 'https://images.pexels.com/photos/128536/pexels-photo-128536.jpeg?auto=compress&w=400',
+  'Baking Potatoes': 'https://images.pexels.com/photos/144248/potatoes-vegetables-erdfrucht-bio-144248.jpeg?auto=compress&w=400',
+  Carrots: 'https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&w=400',
+  'Red Onions': 'https://images.pexels.com/photos/4197447/pexels-photo-4197447.jpeg?auto=compress&w=400',
+  Garlic: 'https://images.pexels.com/photos/6576763/pexels-photo-6576763.jpeg?auto=compress&w=400',
+  Cucumbers: 'https://images.pexels.com/photos/37528/cucumber-salad-food-healthy-37528.jpeg?auto=compress&w=400',
+  Zucchini: 'https://images.pexels.com/photos/128420/pexels-photo-128420.jpeg?auto=compress&w=400',
+  'Romaine Lettuce': 'https://images.pexels.com/photos/1199562/pexels-photo-1199562.jpeg?auto=compress&w=400',
+  Cauliflower: 'https://images.pexels.com/photos/1374651/pexels-photo-1374651.jpeg?auto=compress&w=400',
+  'Green Asparagus': 'https://images.pexels.com/photos/545028/pexels-photo-545028.jpeg?auto=compress&w=400',
+  'Bella Mushrooms': 'https://images.pexels.com/photos/9740583/pexels-photo-9740583.jpeg?auto=compress&w=400',
+  'Sweet Corn': 'https://images.pexels.com/photos/547263/pexels-photo-547263.jpeg?auto=compress&w=400',
+};
+
+const missingProductImages = rawProducts.filter(({ name }) => !productImages[name]);
+if (missingProductImages.length > 0) {
+  throw new Error(
+    `Missing product images for: ${missingProductImages.map(({ name }) => name).join(', ')}`
+  );
+}
+
+if (new Set(Object.values(productImages)).size !== Object.keys(productImages).length) {
+  throw new Error('Each product must have a unique image URL');
+}
+
 async function seed() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
@@ -600,6 +704,7 @@ async function seed() {
 
       productsToInsert.push({
         ...p,
+        image: productImages[p.name],
         embedding,
       });
 

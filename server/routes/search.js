@@ -5,6 +5,34 @@ import { generateEmbedding } from '../utils/embeddings.js';
 
 const router = express.Router();
 
+router.get('/trending', async (req, res) => {
+  const trendingNames = [
+    'Avocados',
+    'Matcha Latte',
+    'Greek Yogurt',
+    'Sourdough Bread',
+    'Dark Chocolate',
+    'Blueberries',
+  ];
+
+  try {
+    const products = await Product.find(
+      { name: { $in: trendingNames } },
+      { embedding: 0 }
+    ).lean();
+    const order = new Map(trendingNames.map((name, index) => [name, index]));
+    products.sort((a, b) => order.get(a.name) - order.get(b.name));
+
+    return res.status(200).json({ results: products });
+  } catch (error) {
+    console.error('Error fetching trending products:', error);
+    return res.status(500).json({
+      error: 'Failed to load trending products',
+      results: [],
+    });
+  }
+});
+
 /**
  * GET /api/search?q=<query>
  * Vector search products based on natural language query embedding.
@@ -41,6 +69,7 @@ router.get('/search', async (req, res) => {
           category: 1,
           price: 1,
           description: 1,
+          image: 1,
           score: { $meta: 'vectorSearchScore' },
         },
       },
@@ -137,6 +166,7 @@ router.get('/product/:id/related', async (req, res) => {
           category: 1,
           price: 1,
           description: 1,
+          image: 1,
           score: { $meta: 'vectorSearchScore' },
         },
       },
@@ -151,6 +181,7 @@ router.get('/product/:id/related', async (req, res) => {
         category: product.category,
         price: product.price,
         description: product.description,
+        image: product.image,
       },
       results: related,
     });
