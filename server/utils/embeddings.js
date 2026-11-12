@@ -1,22 +1,26 @@
 import { pipeline } from '@xenova/transformers';
 
-let extractorInstance = null;
-let isFirstLoad = true;
+let extractorPromise = null;
 
 /**
- * Returns a singleton feature-extraction pipeline instance.
- * Logs a message on the first download/initialization.
+ * Returns a singleton feature-extraction pipeline promise.
+ * Caches the in-flight promise so concurrent requests (e.g. Promise.all)
+ * never load multiple ONNX model instances into memory at the same time.
  */
-export async function getExtractor() {
-  if (!extractorInstance) {
-    if (isFirstLoad) {
-      console.log('Downloading model, please wait...');
-      isFirstLoad = false;
-    }
-    extractorInstance = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    console.log('Embedding model (Xenova/all-MiniLM-L6-v2) ready.');
+export function getExtractor() {
+  if (!extractorPromise) {
+    console.log('Downloading model, please wait...');
+    extractorPromise = pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')
+      .then((extractor) => {
+        console.log('Embedding model (Xenova/all-MiniLM-L6-v2) ready.');
+        return extractor;
+      })
+      .catch((err) => {
+        extractorPromise = null;
+        throw err;
+      });
   }
-  return extractorInstance;
+  return extractorPromise;
 }
 
 /**
@@ -29,4 +33,3 @@ export async function generateEmbedding(text) {
   const output = await extractor(text, { pooling: 'mean', normalize: true });
   return Array.from(output.data);
 }
-

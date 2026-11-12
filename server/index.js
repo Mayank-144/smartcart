@@ -7,6 +7,7 @@ import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import searchRouter from './routes/search.js';
+import { getExtractor } from './utils/embeddings.js';
 
 // Configure reliable DNS servers to ensure Atlas SRV resolution on Windows
 try {
@@ -74,6 +75,15 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Prevent transient async/network errors from crashing the server process
+process.on('unhandledRejection', (reason) => {
+  console.error('⚠️  Unhandled Promise Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('⚠️  Uncaught Exception:', err);
+});
+
 // Database connection & Server initialization
 async function startServer() {
   if (!MONGODB_URI) {
@@ -83,12 +93,20 @@ async function startServer() {
   } else {
     try {
       console.log('Connecting to MongoDB Atlas...');
-      await mongoose.connect(MONGODB_URI);
+      await mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+      });
       console.log('✅ Connected to MongoDB Atlas successfully.');
     } catch (err) {
       console.error('❌ Failed to connect to MongoDB Atlas:', err.message);
     }
   }
+
+  // Pre-warm the embedding model once at startup
+  getExtractor().catch((err) => {
+    console.error('⚠️  Model pre-warm failed (will retry on first search):', err.message);
+  });
 
   app.listen(PORT, () => {
     console.log(`🚀 SmartCart server is running on http://localhost:${PORT}`);
