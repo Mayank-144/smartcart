@@ -1,18 +1,81 @@
 # SmartCart 🛒✨
-### AI-Powered Product Recommendation System using Vector Embeddings
+> **AI-Powered Semantic Product Discovery & Recommendation Engine using Vector Embeddings**
 
-SmartCart is a full-stack MERN application that provides semantic search and AI product recommendations using local transformer embeddings (`@xenova/transformers` with `Xenova/all-MiniLM-L6-v2`) and MongoDB Atlas Vector Search (`$vectorSearch`).
+SmartCart is a modern full-stack e-commerce application that leverages local neural transformers (`@xenova/transformers` running `Xenova/all-MiniLM-L6-v2`) and **MongoDB Atlas Vector Search** (`$vectorSearch`) to deliver real-time semantic search, intelligent cross-selling, mood-based shopping bundles, and smart out-of-stock substitutions.
+
+---
+
+## 🌟 Key Features
+
+### 🔍 1. AI Semantic Natural Language Search
+- Search products using natural intent rather than exact keyword matches (e.g., *"salty evening snacks"*, *"cold creamy dairy"*, *"citrus fizzy drinks"*, *"fresh breakfast"*).
+- Converts user queries into **384-dimensional dense vector embeddings** on-the-fly and executes cosine-similarity vector queries via MongoDB Atlas `$vectorSearch`.
+- Displays real-time vector match scores (% match badge) on each product card.
+- Debounced search (300ms) with clear triggers and fallback states.
+
+### 🔄 2. Smart AI Substitutions ("Out of Stock? Find Alternatives")
+- Encounter an out-of-stock item? The AI finds the closest in-stock semantic substitute using vector proximity.
+- Compares categories and cosine distance to recommend the highest-probability alternative with similarity percentage.
+- One-click replacement directly updates your view and shopping flow.
+
+### 🎯 3. Intelligent Related & Cross-Sell Recommendations
+- Clicking any product reveals related recommendations powered by its pre-computed 384-d vector embedding.
+- Employs **cross-selling category mapping** (e.g., Bakery items suggest complementary Dairy, Beverages, or Fruits like Butter, Cheese, or Coffee) alongside similar items from the same category.
+
+### 🎭 4. Curated Mood-Based Shopping Bundles
+- Instant lifestyle and mood bundles powered by multi-vector searches:
+  - 🎬 **Movie Night:** Crunchy popcorn, potato chips, craft cola, and sweet treats.
+  - 🥗 **Healthy Week:** Nutrient-dense baby spinach, avocados, Greek yogurt, and berries.
+  - 🎉 **Birthday Party:** Donuts, cookies, tortilla chips, lemonade, and party fruits.
+  - ☕ **Lazy Sunday:** Warm croissants, cold brew coffee, fresh juice, and butter.
+
+### 🛒 5. Slide-Out Interactive Cart Drawer
+- Smooth slide-over cart drawer with quantity increments/decrements and removal.
+- Real-time order breakdown (Subtotal, Standard Delivery, Taxes, Savings, and Final Total).
+- Local storage persistence and currency formatted in **₹ INR** with clean fallbacks.
+
+### 📈 6. Trending & Recently Viewed Products
+- **Trending Now:** Instant curated showcase of popular products fetched on launch.
+- **Recently Viewed:** Automatically tracks your browsing history across sessions via `localStorage`.
+
+### ⚡ 7. Production-Grade Transformer Pipeline Optimization
+- **Singleton Extractor:** Reuses pipeline instances to avoid memory leaks.
+- **Pre-warmed Model:** Model initializes on server launch for zero cold-start delay during user requests.
+- **Process Crash Guards:** Graceful unhandled error containment for reliable uptimes.
 
 ---
 
 ## 🏗️ Architecture & Tech Stack
 
-- **Frontend:** React (Vite) + Tailwind CSS (semantic search, search history, recently viewed and trending products, cart suggestions)
-- **Backend:** Node.js (ES Modules) + Express + Mongoose + CORS
-- **Embeddings:** `@xenova/transformers` running the `Xenova/all-MiniLM-L6-v2` 384-dimensional model locally
-- **Database:** MongoDB Atlas with Vector Search index (`similarity: cosine`, `dimensions: 384`)
-- **Product images:** Each seeded product has its own direct Pexels photo URL; emoji fallbacks appear if a photo is unavailable
-- **Display currency:** Prices are shown in INR using a fixed USD-to-INR multiplier of 83 (not a live exchange rate)
+```
+┌────────────────────────────────────────────────────────┐
+│                   Vite + React 18                      │
+│      Tailwind CSS • Lucide Icons • Responsive UI       │
+└───────────────────────────┬────────────────────────────┘
+                            │ REST API (JSON)
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                   Express.js Backend                   │
+│         Node.js (ESM) • CORS • MongoDB Mongoose         │
+└─────────────┬───────────────────────────┬──────────────┘
+              │                           │
+              ▼                           ▼
+┌───────────────────────────┐ ┌──────────────────────────┐
+│   @xenova/transformers    │ │   MongoDB Atlas Database │
+│  all-MiniLM-L6-v2 (384-d) │ │    Vector Search Index   │
+│  (Local Neural Embeddings)│ │   ($vectorSearch Cosine) │
+└───────────────────────────┘ └──────────────────────────┘
+```
+
+| Component | Technology | Description |
+|---|---|---|
+| **Frontend** | React 18, Vite, Tailwind CSS | Reactive UI, dynamic modal drawers, debounced search, badges |
+| **Icons** | Lucide React | Modern, clean feather-style iconography |
+| **Backend** | Node.js (ES Modules), Express | High-performance asynchronous REST API |
+| **AI / Embeddings** | `@xenova/transformers` | Local ONNX execution of `Xenova/all-MiniLM-L6-v2` (384 dimensions) |
+| **Database** | MongoDB Atlas | Cloud database with native Atlas Vector Search (`$vectorSearch`) |
+| **ODM** | Mongoose | Product schema definition with embedding vectors |
+| **Images** | Pexels High-Res CDN | High-resolution direct product photography with emoji fallback |
 
 ---
 
@@ -20,55 +83,66 @@ SmartCart is a full-stack MERN application that provides semantic search and AI 
 
 ```
 smartcart/
-├── package.json               # Root scripts (optional concurrently support)
-├── client/                    # Vite React Frontend
+├── client/                      # Vite + React Frontend
+│   ├── public/                  # Public static assets
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── CartDrawer.jsx   # Slide-out cart with order calculation
+│   │   │   ├── ProductCard.jsx  # Interactive card with match scores & badges
+│   │   │   └── SearchBar.jsx   # Search input, clear button & quick queries
+│   │   ├── App.jsx              # Main view, state, modals & mood selectors
+│   │   ├── index.css            # Tailwind directives & custom utilities
+│   │   └── main.jsx             # React entrypoint
 │   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js
 │   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   └── src/
-│       ├── main.jsx
-│       ├── index.css
-│       ├── App.jsx            # State, 300ms debounce, search grid & related panel
-│       └── components/
-│           ├── SearchBar.jsx  # Centered search bar with clear button & spinner
-│           └── ProductCard.jsx# Category badges, score indicator, hover scaling
-└── server/                    # Express Backend
-    ├── .env.example
-    ├── .env.example           # Copy to .env and configure MONGODB_URI
-    ├── package.json
-    ├── index.js               # Express app, CORS, MongoDB connection
-    ├── models/
-    │   └── Product.js         # Mongoose schema with embedding array
-    ├── routes/
-    │   └── search.js          # /api/search and /api/product/:id/related
-    ├── utils/
-    │   └── embeddings.js      # Feature extraction pipeline (384-dim)
-    └── scripts/
-        └── seedDB.js          # 90 items across 6 categories with embeddings
+│   └── vite.config.js
+│
+├── server/                      # Node.js + Express Backend
+│   ├── models/
+│   │   └── Product.js           # Mongoose schema with 384-d embedding array
+│   ├── routes/
+│   │   └── search.js            # Vector search, related, moods & substitute APIs
+│   ├── scripts/
+│   │   └── seedDB.js            # Database seeder with 90 pre-embedded items
+│   ├── utils/
+│   │   └── embeddings.js        # Cached singleton transformer pipeline
+│   ├── .env.example             # Template for required environment variables
+│   ├── index.js                 # Server entry, CORS configuration & pre-warming
+│   └── package.json
+│
+├── .gitignore
+├── package.json                 # Root script runner (concurrently)
+└── README.md
 ```
-
-Before starting the server, copy `server/.env.example` to `server/.env` and set
-your MongoDB connection string in `MONGODB_URI`. The `.env` file is ignored by
-Git and should not be committed.
-
-Product photos are static Pexels CDN links stored with each product; no image
-API key or image-search service is needed. The footer links to Pexels as the
-photo source.
 
 ---
 
-## ⚙️ MongoDB Atlas Vector Search Setup
+## 🔌 API Reference
 
-After running the seed script, define your Vector Search Index in MongoDB Atlas:
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/search?q=<query>` | Performs vector search against query embedding. Returns top matches with vector score. |
+| `GET` | `/api/trending` | Retrieves list of curated trending grocery products. |
+| `GET` | `/api/product/:id/related` | Returns complementary cross-sell products and same-category items using product embedding. |
+| `GET` | `/api/product/:id/substitute` | Finds closest in-stock semantic substitute for out-of-stock items. |
+| `GET` | `/api/mood/:moodId` | Generates a 5-item curated bundle for moods (`movie-night`, `healthy-week`, etc.). |
 
-1. Go to [MongoDB Atlas](https://cloud.mongodb.com) and navigate to your database cluster.
-2. Click on the **Atlas Search** (or **Search**) tab.
-3. Click **Create Search Index** and choose **Atlas Vector Search (JSON Editor)**.
-4. Select your Database and the **`products`** collection.
-5. Set the **Index Name** to: `vector_index`
-6. Paste the following JSON configuration:
+---
+
+## ⚙️ MongoDB Atlas Vector Search Configuration
+
+To enable vector search queries, create an Atlas Vector Search index on your MongoDB collection:
+
+1. Log into your [MongoDB Atlas Dashboard](https://cloud.mongodb.com/).
+2. Select your cluster and navigate to the **Atlas Search** (or **Search**) tab.
+3. Click **Create Search Index** ➔ Select **Atlas Vector Search** ➔ Click **JSON Editor**.
+4. Select your database (e.g., `smartcart`) and collection (`products`).
+5. Set the **Index Name** to exactly:
+   ```text
+   vector_index
+   ```
+6. Paste the following configuration JSON:
 
 ```json
 {
@@ -83,49 +157,89 @@ After running the seed script, define your Vector Search Index in MongoDB Atlas:
 }
 ```
 
-7. Click **Next** and **Create Vector Search Index**. Wait 1–2 minutes for the status to become **Active**.
+7. Click **Next**, then **Create Vector Search Index**. Wait 1–2 minutes until the index status becomes **Active**.
 
 ---
 
-## 🚀 Local Setup and Render Deployment
+## 🚀 Getting Started Locally
 
-### Configure Atlas and seed products
+### 1. Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) account with a free M0 cluster
 
-1. Create a free Atlas **M0** cluster, a database user with `readWrite` access to
-   the `smartcart` database, and a Network Access entry for `0.0.0.0/0` so Render
-   can connect. Use a strong, unique database-user password.
-2. In Atlas, open **Connect → Drivers**, copy the Node.js connection string, and
-   replace its database name with `smartcart`. In `server/.env`, set:
+### 2. Clone the Repository
+```bash
+git clone https://github.com/Mayank-144/smartcart.git
+cd smartcart
+```
 
-   ```env
-   MONGODB_URI=mongodb+srv://<username>:<url-encoded-password>@<cluster-host>/smartcart?retryWrites=true&w=majority
-   ```
+### 3. Install Dependencies
+Install dependencies across the root, client, and server:
+```bash
+# Root dependencies
+npm install
 
-   URL-encode reserved characters in the password. Keep this secret out of Git;
-   `server/.env` is ignored.
-3. From the repository root, run `npm run seed` (or `cd server` then
-   `npm run seed`). This deletes existing documents in `products`, generates
-   embeddings for all 90 seed products, and inserts them into Atlas. The first
-   run downloads the embedding model; allow several minutes.
-4. Create the `vector_index` Atlas Vector Search index using the JSON above and
-   wait until it is **Active**.
+# Backend dependencies
+cd server && npm install
 
-### Run locally
+# Frontend dependencies
+cd ../client && npm install
 
-Run `npm run dev` from the repository root, then open
-`http://localhost:5173`. Search for `milk` and select a product to check search
-and related-product results.
+cd ..
+```
 
-### Deploy one service to Render
+### 4. Configure Environment Variables
+Create a `.env` file in the `server/` directory:
+```bash
+cp server/.env.example server/.env
+```
 
-The Express server serves `client/dist` when that build exists, so the frontend
-can use its existing relative `/api` URLs without a production Vite proxy.
+Edit `server/.env` with your MongoDB connection string:
+```env
+PORT=5000
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/smartcart?retryWrites=true&w=majority
+```
+*(Ensure any special characters in the password are URL-encoded, and `0.0.0.0/0` is added to Atlas IP Access list).*
 
-1. Push the project to GitHub and create a Render **Web Service** connected to
-   the repository. Leave **Root Directory** blank (repository root).
-2. Set **Build Command** to `npm run build` and **Start Command** to `npm start`.
-3. Add `MONGODB_URI` in Render's environment settings using the same Atlas URI.
-   Render sets `PORT` automatically; do not hardcode it.
-4. Deploy and open the Render service URL. The first request that needs an
-   embedding may take longer while the model assets are downloaded. Render's
-   free service may also sleep when idle and cold-start on the next visit.
+### 5. Seed the Database
+Run the seed script to populate 90 products across 6 categories (Dairy, Bakery, Snacks, Beverages, Fruits, Vegetables) and calculate their 384-dimensional vector embeddings:
+```bash
+npm run seed
+```
+*(Note: On the first run, the transformer model will be downloaded automatically. This takes 1–2 minutes depending on your internet connection).*
+
+### 6. Run the Application
+Start both the backend server and frontend development client concurrently:
+```bash
+npm run dev
+```
+
+- **Frontend Client:** [http://localhost:5173](http://localhost:5173)
+- **Backend API:** [http://localhost:5000](http://localhost:5000)
+
+---
+
+## 🚢 Deployment Guide
+
+### Deploying Full-Stack to Render (Unified Service)
+The Express backend is pre-configured to serve static frontend assets from `client/dist` in production.
+
+1. Push your repository to GitHub.
+2. In Render, create a **New Web Service** connected to your repository.
+3. Configure the service:
+   - **Root Directory:** *(leave blank for root)*
+   - **Build Command:** `npm run build`
+   - **Start Command:** `npm start`
+4. Add Environment Variable:
+   - `MONGODB_URI`: your MongoDB Atlas connection string.
+5. Deploy service. Render automatically assigns a `PORT` and serves both the API and client.
+
+### Deploying Frontend to Vercel & Backend to Render
+If hosting the Vite client on Vercel:
+- **Backend CORS:** Already supports `*.vercel.app`, `*.onrender.com`, and localhost origins.
+- Set `VITE_API_BASE_URL` on Vercel to your deployed Render backend URL.
+
+---
+
+## 🛡️ License
+This project is open source and available under the [MIT License](LICENSE).
